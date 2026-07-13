@@ -34,7 +34,7 @@ export const findUserByOtp = (otp) =>
 
 // update user by id but do not include password
 export const updateUserById = (id, data) =>
-  userRepository.findOneAndUpdate({ where: { _id: id, deletedAt: IsNull() } }, data, { new: true }).select(
+  userRepository.update({ where: { _id: id, deletedAt: IsNull() } }, data, { new: true }).select(
     "-password",
   );
 
