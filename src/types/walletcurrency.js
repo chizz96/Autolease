@@ -1,0 +1,1 @@
+export const SUPPORTED_CURRENCIES = Object.freeze(["NGN", "USD"]);
