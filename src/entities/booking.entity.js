@@ -1,4 +1,5 @@
 import { EntitySchema } from "typeorm";
+import { bookingStatus } from "../types/bookings";
 
 export const Booking = new EntitySchema({
   name: "Booking",
@@ -12,11 +13,11 @@ export const Booking = new EntitySchema({
     },
 
     pickupDate: {
-      type: "timestamp",
+      type: "timestamptz",
     },
 
     returnDate: {
-      type: "timestamp",
+      type: "timestamptz",
     },
 
     pickupLocation: {
@@ -30,14 +31,8 @@ export const Booking = new EntitySchema({
   
     status: {
       type: "enum",
-      enum: [
-        "pending",
-        "confirmed",
-        "ongoing",
-        "completed",
-        "cancelled",
-      ],
-      default: "pending",
+      enum: Object.values(bookingStatus),
+      default: bookingStatus.PENDING,
     },
 
     createdAt: {

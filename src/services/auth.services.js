@@ -4,7 +4,7 @@ import { findUserByEmail, findUserByOtp, createUser, updateUserById,findAllUsers
 createRefreshToken, findRefreshTokenByHash, revokeRefreshToken, revokeAllUserRefreshTokens }
 from "../repositories/auth.repository.js";
 import { sendTemplateEmail } from "../utils/email.utils.js";
-import { issueTokenPair, rotateRefreshToken, revokeRefreshTokenByValue, signAccessToken } from "../utils/authjwt.utils.js";
+import { issueTokenPair, rotateRefreshToken, revokeRefreshTokenByValue, signAccessToken, issuePasswordResetToken } from "../utils/authjwt.utils.js";
 import { AppError } from "../utils/AppError.js";
 import { AuthProvider } from "../types/authProvider.js";
 import { toPublishUser , toPublishWallet } from "../utils/serializer/auth.serializer.js";
@@ -14,36 +14,8 @@ import { toPublishUser , toPublishWallet } from "../utils/serializer/auth.serial
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-export const signUp = async ({ firstName, lastName, email, password }) => {
-  const existingUser = await findUserByEmail(email);
-  if (existingUser) {
-    throw new AppError("User already exists", 409, "DUPLICATE_USER");
-  }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const otp = generateOtp();
-  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-  const newUser = await createUser({
-    firstName,
-    lastName,
-    email,
-    otp,
-    otpExpiry,
-    password: hashedPassword,
-    authProvider: AuthProvider.LOCAL,
-  });
-
-  sendTemplateEmail(email, "Email Verification", "signup", {
-    firstName,
-    lastName,
-    otp,
-  });
-
-  return toPublishUser(newUser);
-};
-
-export const cosignUp = async ({firstName, lastName, email, password, phoneNumber}) => {
+export const signUp = async ({firstName, lastName, email, password, phoneNumber}) => {
 
   return await AppDataSource.transaction(async (manager) => {
 
@@ -186,7 +158,7 @@ export const resendOtp = async ({ email }) => {
   const otp = generateOtp();
   const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-  await updateUserById(user._id, { otp, otpExpiry });
+  await updateUserById(user.id, { otp, otpExpiry });
 
   sendTemplateEmail(user.email, "Your New Verification Code", "resend-otp", {
     firstName: user.firstName,
@@ -194,3 +166,24 @@ export const resendOtp = async ({ email }) => {
     otp,
   });
 };
+
+
+export const forgetPassword = async ({ email }) =>{
+  const user = await findUserByEmail(email, true);
+  if(!user){
+    throw new AppError("User not Found", 404, "NOT_FOUND")
+  }
+
+  const resetToken = await issuePasswordResetToken(user);
+
+  const link = "http://localhost:${env.PORT}/api/auth/reset"
+
+  sendTemplateEmail(user.email, "click the Link to reset password", "reset password", {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    link,
+  });
+};
+
+
+export const resetPassword = async 

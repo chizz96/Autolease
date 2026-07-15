@@ -2,11 +2,16 @@ import { IsNull } from "typeorm";
 import { User } from "../entities/user.entity.js"
 import { AppDataSource } from "../config/db.js"
 import { AuthEntity } from "../entities/auth.entity.js";
+import { forgetpasswordToken } from "../utils/authjwt.utils.js"
 
 
 
 const userRepository = AppDataSource.getRepository(User);
 const authRepository = AppDataSource.getRepository(AuthEntity);
+
+
+export const findUserByGoogleId = (googleId) =>
+  userRepository.findOne({ googleId, deletedAt: null });
 
 // Find user by email but do not include password, otp and otpexpiry
 export const findUserByEmail = (email, includeSecrets = false) => {
@@ -19,7 +24,7 @@ export const findUserByEmail = (email, includeSecrets = false) => {
 
 // find user by id but do not include password, otp and otpexpiry
 export const findUserById = (id, includeSecrets = false) => {
-  let query = userRepository.findOne({ where: { _id: id, deletedAt: IsNull() } });
+  let query = userRepository.findOne({ where: { id: id, deletedAt: IsNull() } });
   if (includeSecrets) {
     query = query.select("+password +otp +otpExpiry phoneNumber, profilePicture, bio");
   } else {
@@ -34,7 +39,7 @@ export const findUserByOtp = (otp) =>
 
 // update user by id but do not include password
 export const updateUserById = (id, data) =>
-  userRepository.update({ where: { _id: id, deletedAt: IsNull() } }, data, { new: true }).select(
+  userRepository.update({ where: { id: id, deletedAt: IsNull() } }, data, { new: true }).select(
     "-password",
   );
 
@@ -94,5 +99,15 @@ export const revokeAllUserRefreshTokens = async (userId) => {
 };
 
 
+export const issuePasswordResetToken = async (user) => {
+  const resetToken = forgetpasswordToken()
+  const passwordResetToken = hashToken(resetToken);
 
+  user.passwordResetTokenHash = passwordResetToken;
+  user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+  await userRepository.save(user);
+
+  return resetToken;
+};
 

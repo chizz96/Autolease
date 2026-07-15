@@ -19,6 +19,7 @@ export const signAccessToken = (user) =>
   );
 
 export const signRefreshToken = () => crypto.randomBytes(40).toString("hex");
+export const forgetpasswordToken = () => crypto.randomBytes(32).toString("hex");
 
 export const verifyAccessToken = (token) => {
   try {
@@ -38,13 +39,14 @@ export const issueTokenPair = async (user) => {
   );
 
   await createRefreshToken({
-    userId: user._id,
+    userId: user.id,
     tokenHash,
     expiresAt,
   });
 
   return { accessToken, refreshToken };
 };
+
 
 export const rotateRefreshToken = async (refreshToken) => {
   const tokenHash = hashToken(refreshToken);

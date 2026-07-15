@@ -27,6 +27,7 @@ export const User = new EntitySchema({
 
     password: {
       type: "varchar",
+      select: false
     },
 
     phoneNumber: {
@@ -40,6 +41,12 @@ export const User = new EntitySchema({
       default: userRole.CUSTOMER,
     },
 
+    googleId: {
+      type: "var",
+      unique: true,
+      sparse: true
+    },
+
     isVerified: {
       type: "boolean",
       default: false,
@@ -51,10 +58,20 @@ export const User = new EntitySchema({
     },
 
     otpExpiresAt: {
-      type: "timestamp",
+      type: "timestamptz",
       nullable: true,
     },
     
+    paswordResetTokenHash: {
+        type: "varchar",
+        nullable: true
+      },
+
+    passwordResetExpires: {
+      type: "timestamp",
+      nullable: true
+    },
+
     profilePicture: {
       type: "text",
       nullable: true,
@@ -66,17 +83,17 @@ export const User = new EntitySchema({
     },
 
     createdAt: {
-      type: "timestamp",
+      type: "timestamptz",
       createDate: true,
     },
 
     updatedAt: {
-      type: "timestamp",
+      type: "timestamptz",
       updateDate: true,
     },
 
     deletedAt: {
-      type: "timestamp",
+      type: "timestamptz",
       deleteDate: true,
     },
   },
@@ -94,11 +111,11 @@ export const User = new EntitySchema({
       inverseSide: "user",
     },
 
-    // vehicles: {
-    //   type: "one-to-many",
-    //   target: "Vehicle",
-    //   inverseSide: "owner",
-    // },
+    vehicles: {
+      type: "one-to-many",
+      target: "Vehicle",
+      inverseSide: "owner",
+    },
 
     // bookings: {
     //   type: "one-to-many",
